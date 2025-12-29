@@ -1,0 +1,359 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlserver"
+}
+
+model account {
+  id        String     @id(map: "PK__account__3213E83F8A9821BE") @default(dbgenerated("newid()"), map: "DF__account__id__47DBAE45") @db.UniqueIdentifier
+  username  String     @unique(map: "UQ__account__F3DBC572C3340508") @db.VarChar(255)
+  password  String     @db.VarChar(500)
+  is_active Boolean?   @default(true, map: "DF__account__is_acti__48CFD27E")
+  role_id   Int
+  role      role       @relation(fields: [role_id], references: [id], onUpdate: NoAction, map: "FK_account_role")
+  customer  customer[]
+  employee  employee[]
+}
+
+model booking_slots {
+  id               Int           @id(map: "PK__booking___3213E83F65C5AB36") @default(autoincrement())
+  start_time       DateTime      @db.DateTime
+  end_time         DateTime      @db.DateTime
+  status           String        @db.NVarChar(50)
+  night_charge     Decimal       @db.Decimal(10, 2)
+  court_booking_id Int
+  court_booking    court_booking @relation(fields: [court_booking_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_booking_slots_court_booking")
+
+  @@unique([court_booking_id, start_time, end_time], map: "UQ_CourtBookingSlot")
+}
+
+model branch {
+  id                                Int               @id(map: "PK__branch__3213E83F6A3F73BC") @default(autoincrement())
+  name                              String            @unique(map: "UQ_R1203_branch_name") @db.NVarChar(255)
+  address                           String            @db.NVarChar(500)
+  hotline                           String            @db.VarChar(20)
+  late_time_limit                   Int
+  max_courts_per_day_per_user       Int
+  shift_pay                         Decimal           @db.Decimal(10, 2)
+  shift_absence_penalty             Decimal           @db.Decimal(10, 2)
+  loyalty_point_rate                Decimal           @db.Decimal(5, 2)
+  cancel_fee_before_24h_percent     Decimal           @db.Decimal(5, 2)
+  cancel_fee_within_24h_percent     Decimal           @db.Decimal(5, 2)
+  no_show_fee_percent               Decimal           @db.Decimal(5, 2)
+  night_booking_additional_charge   Decimal           @db.Decimal(10, 2)
+  holiday_booking_additional_charge Decimal           @db.Decimal(10, 2)
+  weekend_booking_additional_charge Decimal           @db.Decimal(10, 2)
+  open_time                         DateTime          @db.Time
+  close_time                        DateTime          @db.Time
+  branch_service                    branch_service[]
+  court                             court[]
+  discount_policy                   discount_policy[]
+  employee                          employee[]
+}
+
+model branch_service {
+  id                   Int                    @id(map: "PK__branch_s__3213E83F56ED25AA") @default(autoincrement())
+  unit_price           Decimal                @db.Decimal(10, 2)
+  current_stock        Int
+  min_stock_threshold  Int
+  status               String                 @db.NVarChar(50)
+  branch_id            Int
+  service_id           Int
+  branch               branch                 @relation(fields: [branch_id], references: [id], onUpdate: NoAction, map: "FK_branch_service_branch")
+  service              service                @relation(fields: [service_id], references: [id], onUpdate: NoAction, map: "FK_branch_service_service")
+  service_booking_item service_booking_item[]
+
+  @@unique([branch_id, service_id], map: "UQ_BranchService")
+}
+
+model court {
+  id                 Int                  @id(map: "PK__court__3213E83FE6A639C7") @default(autoincrement())
+  name               String               @unique(map: "UQ__court__72E12F1B7A4DC904") @db.NVarChar(100)
+  status             String               @db.NVarChar(50)
+  capacity           Int
+  base_hourly_price  Decimal              @db.Decimal(10, 2)
+  maintenance_date   DateTime?            @db.Date
+  branch_id          Int
+  court_type_id      Int
+  branch             branch               @relation(fields: [branch_id], references: [id], onUpdate: NoAction, map: "FK_court_branch")
+  court_type         court_type           @relation(fields: [court_type_id], references: [id], onUpdate: NoAction, map: "FK_court_court_type")
+  court_booking      court_booking[]
+  maintenance_report maintenance_report[]
+}
+
+model court_booking {
+  id                Int               @id(map: "PK__court_bo__3213E83FF306D2EA") @default(autoincrement())
+  created_at        DateTime?         @default(now(), map: "DF__court_boo__creat__72C60C4A") @db.DateTime
+  booking_date      DateTime          @db.Date
+  type              String            @db.NVarChar(50)
+  status            String            @db.NVarChar(50)
+  by_month          Boolean           @default(false, map: "DF__court_boo__by_mo__73BA3083")
+  booked_base_price Decimal           @db.Decimal(10, 2)
+  holiday_charge    Decimal           @db.Decimal(10, 2)
+  weekend_charge    Decimal           @db.Decimal(10, 2)
+  customer_id       Int
+  employee_id       Int?
+  court_id          Int
+  booking_slots     booking_slots[]
+  court             court             @relation(fields: [court_id], references: [id], onUpdate: NoAction, map: "FK_court_booking_court")
+  customer          customer          @relation(fields: [customer_id], references: [id], onUpdate: NoAction, map: "FK_court_booking_customer")
+  employee          employee?         @relation(fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_court_booking_employee")
+  invoice           invoice[]
+  service_booking   service_booking[]
+}
+
+model court_type {
+  id            Int     @id(map: "PK__court_ty__3213E83F329120BD") @default(autoincrement())
+  name          String  @unique(map: "UQ__court_ty__72E12F1B61BF919A") @db.NVarChar(100)
+  rent_duration Int
+  court         court[]
+}
+
+model customer {
+  id                Int             @id(map: "PK__customer__3213E83F165F4E56") @default(autoincrement())
+  full_name         String          @db.NVarChar(255)
+  dob               DateTime        @db.Date
+  gender            String          @db.NVarChar(10)
+  id_card_number    String          @unique(map: "UQ__customer__7B15C0482018BC1A") @db.VarChar(20)
+  address           String          @db.NVarChar(500)
+  phone_number      String          @unique(map: "UQ__customer__A1936A6B4D062029") @db.VarChar(20)
+  email             String          @unique(map: "UQ__customer__AB6E6164A6E42FEC") @db.VarChar(255)
+  bonus_point       Int?            @default(0, map: "DF__customer__bonus___52593CB8")
+  customer_level_id Int
+  user_id           String          @db.UniqueIdentifier
+  court_booking     court_booking[]
+  account           account         @relation(fields: [user_id], references: [id], onUpdate: NoAction, map: "FK_customer_account")
+  customer_level    customer_level  @relation(fields: [customer_level_id], references: [id], onUpdate: NoAction, map: "FK_customer_customer_level")
+}
+
+model customer_level {
+  id            Int        @id(map: "PK__customer__3213E83F069342E0") @default(autoincrement())
+  name          String     @unique(map: "UQ__customer__72E12F1B6202AF71") @db.NVarChar(100)
+  discount_rate Decimal    @db.Decimal(5, 2)
+  minimum_point Int?
+  customer      customer[]
+}
+
+model discount_policy {
+  id               Int                @id(map: "PK__discount__3213E83F83845150") @default(autoincrement())
+  name             String             @db.NVarChar(255)
+  type             String             @db.NVarChar(50)
+  discount_value   Decimal            @db.Decimal(10, 2)
+  description      String?            @db.NVarChar(500)
+  branch_id        Int
+  branch           branch             @relation(fields: [branch_id], references: [id], onUpdate: NoAction, map: "FK_discount_policy_branch")
+  invoice_discount invoice_discount[]
+}
+
+model employee {
+  id                                                Int                               @id(map: "PK__employee__3213E83F03DB499F") @default(autoincrement())
+  full_name                                         String                            @db.NVarChar(255)
+  gender                                            String                            @db.NVarChar(10)
+  dob                                               DateTime                          @db.Date
+  id_card_number                                    String                            @unique(map: "UQ__employee__7B15C048BB688FE1") @db.VarChar(20)
+  address                                           String                            @db.NVarChar(500)
+  phone_number                                      String                            @unique(map: "UQ__employee__A1936A6B1FEFFB9A") @db.VarChar(20)
+  email                                             String                            @unique(map: "UQ__employee__AB6E616447299AC8") @db.VarChar(255)
+  status                                            String                            @db.NVarChar(50)
+  commission_rate                                   Decimal?                          @db.Decimal(5, 2)
+  base_salary                                       Decimal                           @db.Decimal(10, 2)
+  base_allowance                                    Decimal?                          @db.Decimal(10, 2)
+  user_id                                           String                            @db.UniqueIdentifier
+  branch_id                                         Int
+  court_booking                                     court_booking[]
+  account                                           account                           @relation(fields: [user_id], references: [id], onUpdate: NoAction, map: "FK_employee_account")
+  branch                                            branch                            @relation(fields: [branch_id], references: [id], onUpdate: NoAction, map: "FK_employee_branch")
+  invoice                                           invoice[]
+  leave_request_leave_request_approver_idToemployee leave_request[]                   @relation("leave_request_approver_idToemployee")
+  leave_request_leave_request_creator_idToemployee  leave_request[]                   @relation("leave_request_creator_idToemployee")
+  leave_request_leave_request_replacer_idToemployee leave_request[]                   @relation("leave_request_replacer_idToemployee")
+  maintenance_report                                maintenance_report[]
+  salary_history                                    salary_history[]
+  service_booking                                   service_booking[]
+  service_booking_trainer_referee                   service_booking_trainer_referee[] @ignore
+  shift_assignment                                  shift_assignment[]
+  trainer_referee_info                              trainer_referee_info?
+}
+
+model holidays {
+  id         Int       @id(map: "PK__holidays__3213E83FC83874DA") @default(autoincrement())
+  name       String    @db.NVarChar(100)
+  start_date DateTime? @db.Date
+  end_date   DateTime? @db.Date
+  rec_day    Int?      @db.TinyInt
+  rec_month  Int?      @db.TinyInt
+}
+
+model invoice {
+  id                 Int                @id(map: "PK__invoice__3213E83FF88FD0D0") @default(autoincrement())
+  created_at         DateTime?          @default(now(), map: "DF__invoice__created__10566F31") @db.DateTime
+  total_amount       Decimal            @db.Decimal(10, 2)
+  payment_method     String             @db.NVarChar(50)
+  status             String             @db.NVarChar(50)
+  employee_id        Int?
+  service_booking_id Int?
+  court_booking_id   Int?
+  court_booking      court_booking?     @relation(fields: [court_booking_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_invoice_court_booking")
+  employee           employee?          @relation(fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_invoice_employee")
+  service_booking    service_booking?   @relation(fields: [service_booking_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_invoice_service_booking")
+  invoice_discount   invoice_discount[]
+  refund_info        refund_info[]
+}
+
+model invoice_discount {
+  invoice_id         Int
+  discount_policy_id Int
+  invoice            invoice         @relation(fields: [invoice_id], references: [id], onUpdate: NoAction, map: "FK_invoice_discount_invoice")
+  discount_policy    discount_policy @relation(fields: [discount_policy_id], references: [id], onUpdate: NoAction, map: "FK_invoice_discount_policy")
+
+  @@id([invoice_id, discount_policy_id], map: "PK_invoice_discount")
+}
+
+model leave_request {
+  id                                           Int       @id(map: "PK__leave_re__3213E83F104C81EA") @default(autoincrement())
+  created_at                                   DateTime? @default(now(), map: "DF__leave_req__creat__6D0D32F4") @db.DateTime
+  start_date                                   DateTime  @db.Date
+  end_date                                     DateTime  @db.Date
+  approval_status                              String    @db.NVarChar(50)
+  reason                                       String?
+  creator_id                                   Int
+  approver_id                                  Int?
+  replacer_id                                  Int?
+  employee_leave_request_approver_idToemployee employee? @relation("leave_request_approver_idToemployee", fields: [approver_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_leave_request_approver")
+  employee_leave_request_creator_idToemployee  employee  @relation("leave_request_creator_idToemployee", fields: [creator_id], references: [id], onUpdate: NoAction, map: "FK_leave_request_creator")
+  employee_leave_request_replacer_idToemployee employee? @relation("leave_request_replacer_idToemployee", fields: [replacer_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_leave_request_replacer")
+}
+
+model maintenance_report {
+  id                      Int       @id(map: "PK__maintena__3213E83F391DFDA5") @default(autoincrement())
+  created_at              DateTime? @default(now(), map: "DF__maintenan__creat__7D439ABD") @db.DateTime
+  work_description        String
+  cost                    Decimal   @db.Decimal(10, 2)
+  material_used           String?
+  post_maintenance_status String    @db.NVarChar(50)
+  repairer_id             Int
+  court_id                Int
+  court                   court     @relation(fields: [court_id], references: [id], onUpdate: NoAction, map: "FK_maintenance_report_court")
+  employee                employee  @relation(fields: [repairer_id], references: [id], onUpdate: NoAction, map: "FK_maintenance_report_repairer")
+}
+
+model refund_info {
+  id           Int       @id(map: "PK__refund_i__3213E83FE915EB26") @default(autoincrement())
+  amount       Decimal   @db.Decimal(10, 2)
+  reason       String    @db.NVarChar(500)
+  type         String    @db.NVarChar(50)
+  method       String    @db.NVarChar(50)
+  status       String    @db.NVarChar(50)
+  created_at   DateTime? @default(now(), map: "DF__refund_in__creat__17036CC0") @db.DateTime
+  processed_at DateTime? @db.DateTime
+  notes        String?
+  invoice_id   Int
+  invoice      invoice   @relation(fields: [invoice_id], references: [id], onUpdate: NoAction, map: "FK_refund_info_invoice")
+}
+
+model role {
+  id      Int       @id(map: "PK__role__3213E83F39674324") @default(autoincrement())
+  name    String    @unique(map: "UQ__role__72E12F1B3752CF96") @db.NVarChar(100)
+  account account[]
+}
+
+model salary_history {
+  id                Int      @id(map: "PK__salary_h__3213E83F3ACED6F1") @default(autoincrement())
+  year              Int
+  month             Int
+  base_salary       Decimal  @db.Decimal(10, 2)
+  base_allowance    Decimal? @db.Decimal(10, 2)
+  commission_rate   Decimal? @db.Decimal(5, 2)
+  commission_amount Decimal? @db.Decimal(10, 2)
+  deduction_penalty Decimal? @db.Decimal(10, 2)
+  gross_pay         Decimal  @db.Decimal(10, 2)
+  net_pay           Decimal  @db.Decimal(10, 2)
+  payment_status    String   @db.NVarChar(50)
+  payment_method    String   @db.NVarChar(50)
+  paid_at           DateTime @db.DateTime
+  employee_id       Int
+  employee          employee @relation(fields: [employee_id], references: [id], onUpdate: NoAction, map: "FK_salary_history_employee")
+
+  @@unique([employee_id, month, year], map: "UQ_R1202_employee_month_year")
+}
+
+model service {
+  id             Int              @id(map: "PK__service__3213E83F44009DD0") @default(autoincrement())
+  name           String           @unique(map: "UQ__service__72E12F1B714D38C7") @db.NVarChar(255)
+  unit           String           @db.NVarChar(50)
+  rental_type    String           @db.NVarChar(100)
+  stock_type     String           @db.NVarChar(100)
+  branch_service branch_service[]
+}
+
+model service_booking {
+  id                   Int                    @id(map: "PK__service___3213E83FE8BEE959") @default(autoincrement())
+  created_at           DateTime?              @default(now(), map: "DF__service_b__creat__05D8E0BE") @db.DateTime
+  status               String                 @db.NVarChar(50)
+  court_booking_id     Int
+  employee_id          Int?
+  invoice              invoice[]
+  court_booking        court_booking          @relation(fields: [court_booking_id], references: [id], onUpdate: NoAction, map: "FK_service_booking_court_booking")
+  employee             employee?              @relation(fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_service_booking_employee")
+  service_booking_item service_booking_item[]
+}
+
+model service_booking_item {
+  id                              Int                               @id(map: "PK__service___3213E83FB3A3C5BB") @default(autoincrement())
+  created_at                      DateTime?                         @default(now(), map: "DF__service_b__creat__0A9D95DB") @db.DateTime
+  quantity                        Int
+  start_time                      DateTime                          @db.DateTime
+  end_time                        DateTime                          @db.DateTime
+  by_month                        Boolean                           @default(false, map: "DF__service_b__by_mo__0B91BA14")
+  status                          String                            @db.NVarChar(50)
+  booked_unit_price               Decimal                           @db.Decimal(10, 2)
+  service_booking_id              Int
+  branch_service_id               Int
+  branch_service                  branch_service                    @relation(fields: [branch_service_id], references: [id], onUpdate: NoAction, map: "FK_service_booking_item_branch_service")
+  service_booking                 service_booking                   @relation(fields: [service_booking_id], references: [id], onUpdate: NoAction, map: "FK_service_booking_item_service_booking")
+  service_booking_trainer_referee service_booking_trainer_referee[] @ignore
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model service_booking_trainer_referee {
+  service_booking_item_id Int?
+  employee_id             Int?
+  booked_price            Decimal               @db.Decimal(10, 2)
+  employee                employee?             @relation(fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_service_booking_trainer_referee_employee")
+  service_booking_item    service_booking_item? @relation(fields: [service_booking_item_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_service_booking_trainer_referee_service_booking_item")
+
+  @@ignore
+}
+
+model shift_assignment {
+  employee_id   Int
+  work_shift_id Int
+  status        String     @db.NVarChar(50)
+  note          String?    @db.NVarChar(100)
+  employee      employee   @relation(fields: [employee_id], references: [id], onUpdate: NoAction, map: "FK_shift_assignment_employee")
+  work_shift    work_shift @relation(fields: [work_shift_id], references: [id], onUpdate: NoAction, map: "FK_shift_assignment_work_shift")
+
+  @@id([employee_id, work_shift_id], map: "PK_shift_assignment")
+}
+
+model trainer_referee_info {
+  employee_id    Int      @id(map: "PK__trainer___C52E0BA8244DF163")
+  num_of_exp     Int
+  university     String?  @db.NVarChar(255)
+  specialization String   @db.NVarChar(255)
+  price_per_hour Decimal  @db.Decimal(10, 2)
+  sport_type     String   @db.NVarChar(100)
+  role           String   @db.NVarChar(50)
+  employee       employee @relation(fields: [employee_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_trainer_referee_info_employee")
+}
+
+model work_shift {
+  id               Int                @id(map: "PK__work_shi__3213E83FADFABB56") @default(autoincrement())
+  date             DateTime           @db.Date
+  start_time       DateTime           @db.Time
+  end_time         DateTime           @db.Time
+  required_count   Int
+  shift_assignment shift_assignment[]
+}
