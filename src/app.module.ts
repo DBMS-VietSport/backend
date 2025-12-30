@@ -3,6 +3,12 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaService } from './prisma.service';
 import { ConfigModule } from '@nestjs/config';
+import { BookingModule } from './booking/booking.module';
+import { AuthModule } from './auth/auth.module';
+import { CustomersModule } from './customers/customers.module';
+import { EmployeesModule } from './employees/employees.module';
+import { BranchesModule } from './branches/branches.module';
+import { CourtTypesModule } from './court-types/court-types.module';
 
 @Module({
   imports: [
@@ -10,8 +16,14 @@ import { ConfigModule } from '@nestjs/config';
       isGlobal: true,
       envFilePath: '.env',
     }),
+    BookingModule,
+    AuthModule,
+    CustomersModule,
+    EmployeesModule,
+    BranchesModule,
+    CourtTypesModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],
 })
-export class AppModule {}
+export class AppModule { }

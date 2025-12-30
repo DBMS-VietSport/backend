@@ -1,144 +1,118 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# VietSport Backend - MSSQL Setup Guide
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+This backend application uses NestJS with Prisma to connect to a Microsoft SQL Server database for the VietSport sports center management system.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
-
-## Description
-
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
-
-## Project setup
-
-```bash
-$ npm install
-```
-
-## Compile and run the project
-
-### NestJs
-
-```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
-```
-
-## Run tests
-
-```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
-```
-
-### MSSQL Server
+## MSSQL Server Configuration
 
 To connect to MSSQL Server from your NestJS application using Prisma, follow these steps to configure the server:
 
-1. **Enable TCP/IP Protocol:**
-   - Open SQL Server Configuration Manager.
-   - Navigate to SQL Server Network Configuration > Protocols for [Your Instance Name].
-   - Right-click TCP/IP and select Enable.
+### 1. Enable TCP/IP Protocol
+- Open SQL Server Configuration Manager
+- Navigate to SQL Server Network Configuration > Protocols for [Your Instance Name]
+- Right-click TCP/IP and select Enable
 
-2. **Configure TCP/IP Port:**
-   - Double-click TCP/IP to open properties.
-   - Go to the IP Addresses tab.
-   - Scroll to the IPAll section.
-   - Set the TCP Port to 1433 (or your preferred port).
+### 2. Configure TCP/IP Port
+- Double-click TCP/IP to open properties
+- Go to the IP Addresses tab
+- Scroll to the IPAll section
+- Set the TCP Port to 1433 (or your preferred port)
 
-3. **Restart SQL Server Service:**
-   - In SQL Server Configuration Manager, go to SQL Server Services.
-   - Right-click SQL Server ([Your Instance Name]) and select Restart.
+### 3. Restart SQL Server Service
+- In SQL Server Configuration Manager, go to SQL Server Services
+- Right-click SQL Server ([Your Instance Name]) and select Restart
 
-4. **Enable Mixed Mode Authentication:**
-   - Open SQL Server Management Studio (SSMS).
-   - Right-click the server instance > Properties > Security.
-   - Select "SQL Server and Windows Authentication mode".
-   - Click OK.
-   - Restart the SQL Server service.
+### 4. Enable Mixed Mode Authentication
+- Open SQL Server Management Studio (SSMS)
+- Right-click the server instance > Properties > Security
+- Select "SQL Server and Windows Authentication mode"
+- Click OK
+- Restart the SQL Server service
 
-5. **Create a Database User:**
-   - In SSMS, expand Security > Logins.
-   - Right-click Logins > New Login.
-   - Enter a login name (e.g., 'nestjs_user').
-   - Select SQL Server authentication.
-   - Set a strong password.
-   - Uncheck "Enforce password policy" if needed for development.
-   - In the User Mapping page, select your database.
-   - Assign the db_owner role or appropriate permissions.
+### 5. Create a Database User
+- In SSMS, expand Security > Logins
+- Right-click Logins > New Login
+- Enter a login name (e.g., 'nestjs_user')
+- Select SQL Server authentication
+- Set a strong password
+- Uncheck "Enforce password policy" if needed for development
+- In the User Mapping page, select your database
+- Assign the db_owner role or appropriate permissions
 
-6. **Configure Firewall:**
-   - Open Windows Firewall with Advanced Security.
-   - Create a new Inbound Rule.
-   - Select Port > TCP > Specific local ports: 1433.
-   - Allow the connection.
+### 6. Configure Firewall
+- Open Windows Firewall with Advanced Security
+- Create a new Inbound Rule
+- Select Port > TCP > Specific local ports: 1433
+- Allow the connection
 
-Ensure your connection string in Prisma schema or environment variables points to the correct server, port, database, user, and password.
+### 7. Environment Configuration
+Ensure your `.env` file contains the correct database connection string:
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+```env
+DATABASE_URL="sqlserver://username:password@localhost:1433;database=SportsCenterDB;trustServerCertificate=true"
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+### 8. Database Setup
+Run the database scripts in the `scripts-database` folder in this order:
+1. `create_db.sql` - Creates the database and tables
+2. `create_data.sql` - Inserts sample data
+3. `create_constraints.sql` - Adds constraints and triggers
+4. Execute the stored procedure files in `stored_procedure/` folders as needed
 
-## Resources
+### 9. Prisma Setup
+```bash
+# Install dependencies
+npm install
 
-Check out a few resources that may come in handy when working with NestJS:
+# Generate Prisma client
+npx prisma generate
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+# Run database migrations (if any)
+npx prisma db push
+```
 
-## Support
+### 10. Start the Application
+```bash
+# Development mode
+npm run start:dev
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+# Production mode
+npm run start:prod
+```
 
-## Stay in touch
+## API Documentation
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+Once the application is running, you can access the Swagger API documentation at:
+```
+http://localhost:3000/api
+```
 
-## License
+The documentation provides interactive endpoints for testing all receptionist operations including:
+- Court booking management
+- Service booking management
+- Price calculations
+- Availability queries
+- Trainer/referee assignments
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+## API Endpoints
+
+The application provides REST endpoints for booking operations:
+
+- `POST /booking/calculate-slots-price` - Calculate booking slot prices
+- `POST /booking/court-bookings` - Create court bookings
+- `POST /booking/service-bookings` - Create service bookings
+- `GET /booking/courts/:courtId/booking-slots` - Get booked slots for a court
+- `GET /booking/customers/:customerId/court-bookings` - Get customer court bookings
+- `GET /booking/branches/:branchId/services` - Get available services
+- `GET /booking/service-bookings/:serviceBookingId/details` - Get service booking details
+- `GET /booking/court-bookings/:courtBookingId/service-bookings` - Get service bookings for court booking
+- `GET /booking/court-bookings/:courtBookingId/trainer-referee` - Get available trainers/referees
+- `GET /booking/branches/:branchId/courts` - List courts by branch and type
+- `PUT /booking/court-bookings/:bookingId` - Update court booking
+
+## Troubleshooting
+
+- Ensure SQL Server is running and accessible
+- Verify firewall settings allow connections on port 1433
+- Check that the database user has appropriate permissions
+- Confirm the connection string in `.env` is correct
+- Make sure all stored procedures are created in the database
