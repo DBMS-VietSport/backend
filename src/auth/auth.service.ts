@@ -58,6 +58,7 @@ export class AuthService {
       branchId: this.getBranchId(user),
       branchName: this.getBranchName(user),
       customerId: this.getCustomerId(user),
+      employeeId: this.getEmployeeId(user),
     };
     return {
       access_token: this.jwtService.sign(payload),
@@ -69,6 +70,7 @@ export class AuthService {
         branchId: this.getBranchId(user),
         branchName: this.getBranchName(user),
         customerId: this.getCustomerId(user),
+        employeeId: this.getEmployeeId(user),
       },
     };
   }
@@ -93,6 +95,13 @@ export class AuthService {
   private getBranchName(user: any): string | undefined {
     if (user.employee && user.employee.length > 0) {
       return user.employee[0].branch?.name;
+    }
+    return undefined;
+  }
+
+  private getEmployeeId(user: any): number | undefined {
+    if (user.employee && user.employee.length > 0) {
+      return user.employee[0].id;
     }
     return undefined;
   }

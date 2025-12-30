@@ -25,8 +25,9 @@ export class BookingService {
   ) {
     const creatorParam = creator !== null ? creator : 'NULL';
     const byMonthParam = byMonth ? 1 : 0;
+    console.log(type);
     const result = await this.prisma.$executeRawUnsafe(
-      `EXEC sp_create_court_booking @creator = ${creatorParam}, @customer_id = ${customerId}, @court_id = ${courtId}, @booking_date = '${bookingDate}', @slots = '${slots}', @by_month = ${byMonthParam}, @branch_id = ${branchId}, @type = '${type}'`
+      `EXEC sp_create_court_booking @creator = ${creatorParam}, @customer_id = ${customerId}, @court_id = ${courtId}, @booking_date = '${bookingDate}', @slots = '${slots}', @by_month = ${byMonthParam}, @branch_id = ${branchId}, @type = N'${type}'`
     );
     return result;
   }
