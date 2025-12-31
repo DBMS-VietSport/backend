@@ -82,7 +82,7 @@ export class BookingController {
     @Body()
     body: {
       creator?: number;
-      customerId: number;
+      customerId: number | string;
       courtId: number;
       bookingDate: string;
       slots: string;
@@ -94,11 +94,11 @@ export class BookingController {
     return this.bookingService.createCourtBooking(
       body.creator || null,
       body.customerId,
-      body.courtId,
+      parseInt(body.courtId.toString()),
       body.bookingDate,
       body.slots,
       body.byMonth,
-      body.branchId,
+      parseInt(body.branchId.toString()),
       body.type,
     );
   }

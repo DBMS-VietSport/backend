@@ -15,7 +15,7 @@ export class BookingService {
 
   async createCourtBooking(
     creator: number | null,
-    customerId: number,
+    customerId: number | string,
     courtId: number,
     bookingDate: string,
     slots: string,
@@ -23,11 +23,31 @@ export class BookingService {
     branchId: number,
     type: string,
   ) {
+    // Handle customerId: if string, assume it's account id, find customer id
+    let customerIdNum: number;
+    if (typeof customerId === 'string') {
+      const customer = await this.prisma.customer.findFirst({
+        where: { user_id: customerId },
+        select: { id: true },
+      });
+      if (!customer) {
+        throw new Error('Customer not found');
+      }
+      customerIdNum = customer.id;
+    } else {
+      customerIdNum = customerId;
+    }
+
     const creatorParam = creator !== null ? creator : 'NULL';
     const byMonthParam = byMonth ? 1 : 0;
-    console.log(type);
+    // Ensure numeric parameters are numbers
+    const courtIdNum = Number(courtId);
+    const branchIdNum = Number(branchId);
+    // Escape single quotes for SQL
+    const escapedSlots = slots.replace(/'/g, "''");
+    const escapedType = type.replace(/'/g, "''");
     const result = await this.prisma.$executeRawUnsafe(
-      `EXEC sp_create_court_booking @creator = ${creatorParam}, @customer_id = ${customerId}, @court_id = ${courtId}, @booking_date = '${bookingDate}', @slots = '${slots}', @by_month = ${byMonthParam}, @branch_id = ${branchId}, @type = N'${type}'`
+      `EXEC sp_create_court_booking @creator = ${creatorParam}, @customer_id = ${customerIdNum}, @court_id = ${courtIdNum}, @booking_date = '${bookingDate}', @slots = '${escapedSlots}', @by_month = ${byMonthParam}, @branch_id = ${branchIdNum}, @type = N'${escapedType}'`
     );
     return result;
   }
