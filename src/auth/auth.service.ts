@@ -34,7 +34,11 @@ export class AuthService {
 
     // Check if password is hashed (bcrypt) or plain text (for development)
     let isPasswordValid = false;
-    if (user.password.startsWith('$2a$') || user.password.startsWith('$2b$') || user.password.startsWith('$2y$')) {
+    if (
+      user.password.startsWith('$2a$') ||
+      user.password.startsWith('$2b$') ||
+      user.password.startsWith('$2y$')
+    ) {
       // Bcrypt hash
       isPasswordValid = await bcrypt.compare(password, user.password);
     } else {
@@ -51,9 +55,9 @@ export class AuthService {
   }
 
   async login(user: any) {
-    const payload = { 
-      username: user.username, 
-      sub: user.id, 
+    const payload = {
+      username: user.username,
+      sub: user.id,
       role: user.role.name,
       branchId: this.getBranchId(user),
       branchName: this.getBranchName(user),

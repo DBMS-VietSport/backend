@@ -3,12 +3,12 @@ import { PrismaService } from '../prisma.service';
 
 @Injectable()
 export class BookingService {
-  constructor(private prisma: PrismaService) { }
+  constructor(private prisma: PrismaService) {}
 
   async calculateSlotsPrice(courtId: number, date: string, slots: string) {
     // Direct parameter interpolation for MSSQL
     const result = await this.prisma.$queryRawUnsafe(
-      `EXEC sp_receptionist_calculate_slots_price @court_id = ${courtId}, @date = '${date}', @slots = '${slots}'`
+      `EXEC sp_receptionist_calculate_slots_price @court_id = ${courtId}, @date = '${date}', @slots = '${slots}'`,
     );
     return result;
   }
@@ -23,17 +23,30 @@ export class BookingService {
     branchId: number,
     type: string,
   ) {
-    // Handle customerId: if string, assume it's account id, find customer id
+    // Handle customerId: if string, check if UUID (account id) or number string (customer id)
     let customerIdNum: number;
     if (typeof customerId === 'string') {
-      const customer = await this.prisma.customer.findFirst({
-        where: { user_id: customerId },
-        select: { id: true },
-      });
-      if (!customer) {
-        throw new Error('Customer not found');
+      // Check if it's a valid UUID (account id)
+      const uuidRegex =
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+      if (uuidRegex.test(customerId)) {
+        // It's account id, find customer
+        const account = await this.prisma.account.findUnique({
+          where: { id: customerId },
+          include: { customer: true },
+        });
+        if (!account || !account.customer || account.customer.length === 0) {
+          throw new Error('Customer not found');
+        }
+        customerIdNum = account.customer[0].id;
+      } else {
+        // Assume it's customer id as string
+        const parsed = parseInt(customerId, 10);
+        if (isNaN(parsed)) {
+          throw new Error('Invalid customer ID');
+        }
+        customerIdNum = parsed;
       }
-      customerIdNum = customer.id;
     } else {
       customerIdNum = customerId;
     }
@@ -47,7 +60,7 @@ export class BookingService {
     const escapedSlots = slots.replace(/'/g, "''");
     const escapedType = type.replace(/'/g, "''");
     const result = await this.prisma.$executeRawUnsafe(
-      `EXEC sp_create_court_booking @creator = ${creatorParam}, @customer_id = ${customerIdNum}, @court_id = ${courtIdNum}, @booking_date = '${bookingDate}', @slots = '${escapedSlots}', @by_month = ${byMonthParam}, @branch_id = ${branchIdNum}, @type = N'${escapedType}'`
+      `EXEC sp_create_court_booking @creator = ${creatorParam}, @customer_id = ${customerIdNum}, @court_id = ${courtIdNum}, @booking_date = '${bookingDate}', @slots = '${escapedSlots}', @by_month = ${byMonthParam}, @branch_id = ${branchIdNum}, @type = N'${escapedType}'`,
     );
     return result;
   }
@@ -59,61 +72,65 @@ export class BookingService {
   ) {
     const employeeParam = employeeId !== null ? employeeId : 'NULL';
     const result = await this.prisma.$executeRawUnsafe(
-      `EXEC sp_create_service_booking @court_booking_id = ${courtBookingId}, @employee_id = ${employeeParam}, @items = '${items}'`
+      `EXEC sp_create_service_booking @court_booking_id = ${courtBookingId}, @employee_id = ${employeeParam}, @items = '${items}'`,
     );
     return result;
   }
 
   async getBookingSlotsOfCourt(courtId: number, date: string) {
     const result = await this.prisma.$queryRawUnsafe(
-      `EXEC sp_receptionist_get_booking_slots_of_court @court_id = ${courtId}, @date = '${date}'`
+      `EXEC sp_receptionist_get_booking_slots_of_court @court_id = ${courtId}, @date = '${date}'`,
     );
     return result;
   }
 
   async getCustomerCourtBookings(customerId: number, branchId: number) {
     const result = await this.prisma.$queryRawUnsafe(
-      `EXEC sp_receptionist_get_customer_court_bookings @customer_id = ${customerId}, @branch_id = ${branchId}`
+      `EXEC sp_receptionist_get_customer_court_bookings @customer_id = ${customerId}, @branch_id = ${branchId}`,
     );
     return result;
   }
 
   async getServices(branchId: number) {
     const result = await this.prisma.$queryRawUnsafe(
-      `EXEC sp_receptionist_get_services @branch_id = ${branchId}`
+      `EXEC sp_receptionist_get_services @branch_id = ${branchId}`,
     );
     return result;
   }
 
   async getServiceBookingDetails(serviceBookingId: number) {
     const result = await this.prisma.$queryRawUnsafe(
-      `EXEC sp_receptionist_get_service_booking_details @service_booking_id = ${serviceBookingId}`
+      `EXEC sp_receptionist_get_service_booking_details @service_booking_id = ${serviceBookingId}`,
     );
     return result;
   }
 
   async getServiceBookingInfo(courtBookingId: number) {
     const result = await this.prisma.$queryRawUnsafe(
-      `EXEC sp_receptionist_get_service_booking_info @court_booking_id = ${courtBookingId}`
+      `EXEC sp_receptionist_get_service_booking_info @court_booking_id = ${courtBookingId}`,
     );
     return result;
   }
 
   async getTrainerReferee(courtBookingId: number) {
     const result = await this.prisma.$queryRawUnsafe(
-      `EXEC sp_receptionist_get_trainer_referee @court_booking_id = ${courtBookingId}`
+      `EXEC sp_receptionist_get_trainer_referee @court_booking_id = ${courtBookingId}`,
     );
     return result;
   }
 
   async listCourtsOfBranch(branchId: number, courtTypeId: number) {
-    console.log(`[BookingService] listCourtsOfBranch: branchId=${branchId}, courtTypeId=${courtTypeId}`);
+    console.log(
+      `[BookingService] listCourtsOfBranch: branchId=${branchId}, courtTypeId=${courtTypeId}`,
+    );
     // For MSSQL $queryRawUnsafe, we need to interpolate parameters directly
     const courtTypeParam = courtTypeId ? courtTypeId : 'NULL';
     const query = `EXEC sp_receptionist_list_courts_of_branch @branch_id = ${branchId}, @court_type_id = ${courtTypeParam}`;
     console.log(`[BookingService] query: ${query}`);
     const result = await this.prisma.$queryRawUnsafe(query);
-    console.log(`[BookingService] result count: ${Array.isArray(result) ? (result as any[]).length : 'not an array'}`);
+    console.log(
+      `[BookingService] result count: ${Array.isArray(result) ? (result as any[]).length : 'not an array'}`,
+    );
     return result;
   }
 
@@ -125,17 +142,20 @@ export class BookingService {
     branchId: number,
   ) {
     const result = await this.prisma.$executeRawUnsafe(
-      `EXEC sp_receptionist_update_court_booking @booking_id = ${bookingId}, @new_court_id = ${newCourtId}, @new_booking_date = '${newBookingDate}', @new_slots = '${newSlots}', @branch_id = ${branchId}`
+      `EXEC sp_receptionist_update_court_booking @booking_id = ${bookingId}, @new_court_id = ${newCourtId}, @new_booking_date = '${newBookingDate}', @new_slots = '${newSlots}', @branch_id = ${branchId}`,
     );
     return result;
   }
 
-  async getBranchCourtBookings(branchId: number, filters?: {
-    status?: string;
-    dateFrom?: string;
-    dateTo?: string;
-    search?: string;
-  }) {
+  async getBranchCourtBookings(
+    branchId: number,
+    filters?: {
+      status?: string;
+      dateFrom?: string;
+      dateTo?: string;
+      search?: string;
+    },
+  ) {
     let whereClause = `cb.court_id IN (SELECT id FROM court WHERE branch_id = ${branchId})`;
 
     if (filters?.status) {
@@ -244,11 +264,11 @@ export class BookingService {
     bookingId: number,
     method: string = 'Chuyển khoản',
     type: string = 'CourtCancel',
-    reason: string = 'Khách hàng hủy đặt sân'
+    reason: string = 'Khách hàng hủy đặt sân',
   ) {
     // Use $executeRawUnsafe for MSSQL stored procedure with direct interpolation
     const result = await this.prisma.$executeRawUnsafe(
-      `EXEC sp_CancelCourtBooking @CourtBookingId = ${bookingId}, @Method = '${method}', @Type = '${type}', @Reason = N'${reason}'`
+      `EXEC sp_CancelCourtBooking @CourtBookingId = ${bookingId}, @Method = '${method}', @Type = '${type}', @Reason = N'${reason}'`,
     );
     return result;
   }

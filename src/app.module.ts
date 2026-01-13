@@ -26,4 +26,4 @@ import { CourtTypesModule } from './court-types/court-types.module';
   controllers: [AppController],
   providers: [AppService, PrismaService],
 })
-export class AppModule { }
+export class AppModule {}

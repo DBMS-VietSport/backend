@@ -1,4 +1,15 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query, ParseIntPipe } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Body,
+  Param,
+  Query,
+  ParseIntPipe,
+  UseGuards,
+} from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
@@ -8,11 +19,15 @@ import {
   ApiBody,
 } from '@nestjs/swagger';
 import { BookingService } from './booking.service';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { RolesGuard } from '../auth/roles.guard';
+import { Roles, ROLES } from '../auth/roles.decorator';
 
 @ApiTags('booking')
 @Controller('booking')
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class BookingController {
-  constructor(private readonly bookingService: BookingService) { }
+  constructor(private readonly bookingService: BookingService) {}
 
   @Post('calculate-slots-price')
   @ApiOperation({ summary: 'Calculate booking slot prices' })
@@ -40,6 +55,7 @@ export class BookingController {
   }
 
   @Post('court-bookings')
+  @Roles(ROLES.CUSTOMER, ROLES.RECEPTIONIST, ROLES.MANAGER, ROLES.ADMIN)
   @ApiOperation({ summary: 'Create a new court booking' })
   @ApiBody({
     description: 'Court booking creation parameters',
@@ -158,7 +174,18 @@ export class BookingController {
   }
 
   @Get('customers/:customerId/court-bookings')
-  @ApiOperation({ summary: 'Get all court bookings for a customer specific to a branch' })
+  @Roles(
+    ROLES.CUSTOMER,
+    ROLES.RECEPTIONIST,
+    ROLES.MANAGER,
+    ROLES.ADMIN,
+    ROLES.CASHIER,
+    ROLES.TECHNICAL,
+    ROLES.TRAINER,
+  )
+  @ApiOperation({
+    summary: 'Get all court bookings for a customer specific to a branch',
+  })
   @ApiParam({ name: 'customerId', description: 'Customer ID' })
   @ApiQuery({ name: 'branchId', required: true, description: 'Branch ID' })
   @ApiResponse({
@@ -282,13 +309,41 @@ export class BookingController {
   }
 
   @Get('branches/:branchId/court-bookings')
+  @Roles(
+    ROLES.RECEPTIONIST,
+    ROLES.MANAGER,
+    ROLES.ADMIN,
+    ROLES.CASHIER,
+    ROLES.TECHNICAL,
+    ROLES.TRAINER,
+    ROLES.CUSTOMER,
+  )
   @ApiOperation({ summary: 'Get all court bookings for a branch' })
   @ApiParam({ name: 'branchId', description: 'Branch ID' })
-  @ApiQuery({ name: 'status', required: false, description: 'Filter by booking status' })
-  @ApiQuery({ name: 'dateFrom', required: false, description: 'Filter from date (YYYY-MM-DD)' })
-  @ApiQuery({ name: 'dateTo', required: false, description: 'Filter to date (YYYY-MM-DD)' })
-  @ApiQuery({ name: 'search', required: false, description: 'Search in court name, customer name, employee name' })
-  @ApiResponse({ status: 200, description: 'Court bookings retrieved successfully' })
+  @ApiQuery({
+    name: 'status',
+    required: false,
+    description: 'Filter by booking status',
+  })
+  @ApiQuery({
+    name: 'dateFrom',
+    required: false,
+    description: 'Filter from date (YYYY-MM-DD)',
+  })
+  @ApiQuery({
+    name: 'dateTo',
+    required: false,
+    description: 'Filter to date (YYYY-MM-DD)',
+  })
+  @ApiQuery({
+    name: 'search',
+    required: false,
+    description: 'Search in court name, customer name, employee name',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Court bookings retrieved successfully',
+  })
   async getBranchCourtBookings(
     @Param('branchId') branchId: number,
     @Query('status') status?: string,
@@ -305,20 +360,30 @@ export class BookingController {
   }
 
   @Get('court-bookings/:bookingId/details')
-  @ApiOperation({ summary: 'Get a single court booking by ID with full details' })
+  @ApiOperation({
+    summary: 'Get a single court booking by ID with full details',
+  })
   @ApiParam({ name: 'bookingId', description: 'Court booking ID' })
-  @ApiResponse({ status: 200, description: 'Booking details retrieved successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Booking details retrieved successfully',
+  })
   @ApiResponse({ status: 404, description: 'Booking not found' })
-  async getCourtBookingById(@Param('bookingId', ParseIntPipe) bookingId: number) {
+  async getCourtBookingById(
+    @Param('bookingId', ParseIntPipe) bookingId: number,
+  ) {
     return this.bookingService.getCourtBookingById(bookingId);
   }
 
   @Delete('court-bookings/:bookingId')
+  @Roles(ROLES.CUSTOMER, ROLES.RECEPTIONIST, ROLES.MANAGER, ROLES.ADMIN)
   @ApiOperation({ summary: 'Cancel a court booking' })
   @ApiParam({ name: 'bookingId', description: 'Court booking ID to cancel' })
   @ApiResponse({ status: 200, description: 'Booking cancelled successfully' })
   @ApiResponse({ status: 404, description: 'Booking not found' })
-  async cancelCourtBooking(@Param('bookingId', ParseIntPipe) bookingId: number) {
+  async cancelCourtBooking(
+    @Param('bookingId', ParseIntPipe) bookingId: number,
+  ) {
     return this.bookingService.cancelCourtBooking(bookingId);
   }
 }

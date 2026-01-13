@@ -49,6 +49,9 @@ export class PrismaService
         { emit: 'event', level: 'error' },
         { emit: 'event', level: 'warn' },
       ],
+      transactionOptions: {
+        timeout: 30000, // Increase timeout to 30 seconds
+      },
     });
 
     // Optional: Log slow queries in development
