@@ -9,6 +9,8 @@ import { CustomersModule } from './customers/customers.module';
 import { EmployeesModule } from './employees/employees.module';
 import { BranchesModule } from './branches/branches.module';
 import { CourtTypesModule } from './court-types/court-types.module';
+import { CourtsModule } from './courts/courts.module';
+import { ServicesModule } from './services/services.module';
 
 @Module({
   imports: [
@@ -22,6 +24,8 @@ import { CourtTypesModule } from './court-types/court-types.module';
     EmployeesModule,
     BranchesModule,
     CourtTypesModule,
+    CourtsModule,
+    ServicesModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],
