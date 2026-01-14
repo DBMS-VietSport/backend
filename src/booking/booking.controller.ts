@@ -30,6 +30,13 @@ export class BookingController {
   constructor(private readonly bookingService: BookingService) {}
 
   @Post('calculate-slots-price')
+  @Roles(
+    ROLES.CUSTOMER,
+    ROLES.RECEPTIONIST,
+    ROLES.MANAGER,
+    ROLES.ADMIN,
+    ROLES.CASHIER,
+  )
   @ApiOperation({ summary: 'Calculate booking slot prices' })
   @ApiBody({
     description: 'Slot price calculation parameters',
@@ -120,6 +127,13 @@ export class BookingController {
   }
 
   @Post('service-bookings')
+  @Roles(
+    ROLES.CUSTOMER,
+    ROLES.RECEPTIONIST,
+    ROLES.MANAGER,
+    ROLES.ADMIN,
+    ROLES.CASHIER,
+  )
   @ApiOperation({ summary: 'Create a new service booking' })
   @ApiBody({
     description: 'Service booking creation parameters',
@@ -159,6 +173,15 @@ export class BookingController {
   }
 
   @Get('courts/:courtId/booking-slots')
+  @Roles(
+    ROLES.CUSTOMER,
+    ROLES.RECEPTIONIST,
+    ROLES.MANAGER,
+    ROLES.ADMIN,
+    ROLES.CASHIER,
+    ROLES.TECHNICAL,
+    ROLES.TRAINER,
+  )
   @ApiOperation({ summary: 'Get booked slots for a specific court on a date' })
   @ApiParam({ name: 'courtId', description: 'Court ID' })
   @ApiQuery({ name: 'date', description: 'Date to check bookings for' })
@@ -200,6 +223,15 @@ export class BookingController {
   }
 
   @Get('branches/:branchId/services')
+  @Roles(
+    ROLES.CUSTOMER,
+    ROLES.RECEPTIONIST,
+    ROLES.MANAGER,
+    ROLES.ADMIN,
+    ROLES.CASHIER,
+    ROLES.TECHNICAL,
+    ROLES.TRAINER,
+  )
   @ApiOperation({ summary: 'Get all services available at a branch' })
   @ApiParam({ name: 'branchId', description: 'Branch ID' })
   @ApiResponse({
@@ -211,6 +243,15 @@ export class BookingController {
   }
 
   @Get('service-bookings/:serviceBookingId/details')
+  @Roles(
+    ROLES.CUSTOMER,
+    ROLES.RECEPTIONIST,
+    ROLES.MANAGER,
+    ROLES.ADMIN,
+    ROLES.CASHIER,
+    ROLES.TECHNICAL,
+    ROLES.TRAINER,
+  )
   @ApiOperation({ summary: 'Get detailed information about a service booking' })
   @ApiParam({ name: 'serviceBookingId', description: 'Service booking ID' })
   @ApiResponse({
@@ -224,6 +265,15 @@ export class BookingController {
   }
 
   @Get('court-bookings/:courtBookingId/service-bookings')
+  @Roles(
+    ROLES.CUSTOMER,
+    ROLES.RECEPTIONIST,
+    ROLES.MANAGER,
+    ROLES.ADMIN,
+    ROLES.CASHIER,
+    ROLES.TECHNICAL,
+    ROLES.TRAINER,
+  )
   @ApiOperation({ summary: 'Get all service bookings for a court booking' })
   @ApiParam({ name: 'courtBookingId', description: 'Court booking ID' })
   @ApiResponse({
@@ -235,6 +285,13 @@ export class BookingController {
   }
 
   @Get('court-bookings/:courtBookingId/trainer-referee')
+  @Roles(
+    ROLES.CUSTOMER,
+    ROLES.RECEPTIONIST,
+    ROLES.MANAGER,
+    ROLES.ADMIN,
+    ROLES.CASHIER,
+  )
   @ApiOperation({
     summary: 'Get available trainers/referees for a court booking',
   })
@@ -248,6 +305,15 @@ export class BookingController {
   }
 
   @Get('branches/:branchId/courts')
+  @Roles(
+    ROLES.CUSTOMER,
+    ROLES.RECEPTIONIST,
+    ROLES.MANAGER,
+    ROLES.ADMIN,
+    ROLES.CASHIER,
+    ROLES.TECHNICAL,
+    ROLES.TRAINER,
+  )
   @ApiOperation({
     summary: 'List all courts at a branch filtered by court type',
   })
@@ -265,6 +331,7 @@ export class BookingController {
   }
 
   @Put('court-bookings/:bookingId')
+  @Roles(ROLES.CUSTOMER, ROLES.RECEPTIONIST, ROLES.MANAGER, ROLES.ADMIN)
   @ApiOperation({ summary: 'Update an existing court booking' })
   @ApiParam({ name: 'bookingId', description: 'Court booking ID to update' })
   @ApiBody({
@@ -360,6 +427,15 @@ export class BookingController {
   }
 
   @Get('court-bookings/:bookingId/details')
+  @Roles(
+    ROLES.CUSTOMER,
+    ROLES.RECEPTIONIST,
+    ROLES.MANAGER,
+    ROLES.ADMIN,
+    ROLES.CASHIER,
+    ROLES.TECHNICAL,
+    ROLES.TRAINER,
+  )
   @ApiOperation({
     summary: 'Get a single court booking by ID with full details',
   })

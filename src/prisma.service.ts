@@ -38,6 +38,8 @@ export class PrismaService
         port: Number(process.env.DB_PORT) || 1433,
         encrypt: true, // for azure
         trustServerCertificate: true, // change to true for local dev / self-signed certs
+        requestTimeout: 60000, // Increase request timeout to 60 seconds
+        connectionTimeout: 30000, // Connection timeout 30 seconds
       },
     });
 

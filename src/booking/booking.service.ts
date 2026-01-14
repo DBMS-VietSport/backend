@@ -266,8 +266,8 @@ export class BookingService {
     type: string = 'CourtCancel',
     reason: string = 'Khách hàng hủy đặt sân',
   ) {
-    // Use $executeRawUnsafe for MSSQL stored procedure with direct interpolation
-    const result = await this.prisma.$executeRawUnsafe(
+    // Use $queryRawUnsafe for MSSQL stored procedure that returns result sets
+    const result = await this.prisma.$queryRawUnsafe(
       `EXEC sp_CancelCourtBooking @CourtBookingId = ${bookingId}, @Method = '${method}', @Type = '${type}', @Reason = N'${reason}'`,
     );
     return result;
