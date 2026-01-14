@@ -65,6 +65,58 @@ export class BookingService {
     return result;
   }
 
+  async createCourtBookingClone(
+    creator: number | null,
+    customerId: number | string,
+    courtId: number,
+    bookingDate: string,
+    slots: string,
+    byMonth: boolean,
+    branchId: number,
+    type: string,
+  ) {
+    // Handle customerId: if string, check if UUID (account id) or number string (customer id)
+    let customerIdNum: number;
+    if (typeof customerId === 'string') {
+      // Check if it's a valid UUID (account id)
+      const uuidRegex =
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+      if (uuidRegex.test(customerId)) {
+        // It's account id, find customer
+        const account = await this.prisma.account.findUnique({
+          where: { id: customerId },
+          include: { customer: true },
+        });
+        if (!account || !account.customer || account.customer.length === 0) {
+          throw new Error('Customer not found');
+        }
+        customerIdNum = account.customer[0].id;
+      } else {
+        // Assume it's customer id as string
+        const parsed = parseInt(customerId, 10);
+        if (isNaN(parsed)) {
+          throw new Error('Invalid customer ID');
+        }
+        customerIdNum = parsed;
+      }
+    } else {
+      customerIdNum = customerId;
+    }
+
+    const creatorParam = creator !== null ? creator : 'NULL';
+    const byMonthParam = byMonth ? 1 : 0;
+    // Ensure numeric parameters are numbers
+    const courtIdNum = Number(courtId);
+    const branchIdNum = Number(branchId);
+    // Escape single quotes for SQL
+    const escapedSlots = slots.replace(/'/g, "''");
+    const escapedType = type.replace(/'/g, "''");
+    const result = await this.prisma.$executeRawUnsafe(
+      `EXEC sp_create_court_booking_clone @creator = ${creatorParam}, @customer_id = ${customerIdNum}, @court_id = ${courtIdNum}, @booking_date = '${bookingDate}', @slots = '${escapedSlots}', @by_month = ${byMonthParam}, @branch_id = ${branchIdNum}, @type = N'${escapedType}'`,
+    );
+    return result;
+  }
+
   async createServiceBooking(
     courtBookingId: number,
     employeeId: number | null,
@@ -73,6 +125,18 @@ export class BookingService {
     const employeeParam = employeeId !== null ? employeeId : 'NULL';
     const result = await this.prisma.$executeRawUnsafe(
       `EXEC sp_create_service_booking @court_booking_id = ${courtBookingId}, @employee_id = ${employeeParam}, @items = '${items}'`,
+    );
+    return result;
+  }
+
+  async createServiceBookingClone(
+    courtBookingId: number,
+    employeeId: number | null,
+    items: string,
+  ) {
+    const employeeParam = employeeId !== null ? employeeId : 'NULL';
+    const result = await this.prisma.$executeRawUnsafe(
+      `EXEC sp_create_service_booking_clone @court_booking_id = ${courtBookingId}, @employee_id = ${employeeParam}, @items = '${items}'`,
     );
     return result;
   }

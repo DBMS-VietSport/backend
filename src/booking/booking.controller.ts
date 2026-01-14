@@ -126,6 +126,71 @@ export class BookingController {
     );
   }
 
+  @Post('court-bookings-clone')
+  @Roles(ROLES.CUSTOMER, ROLES.RECEPTIONIST, ROLES.MANAGER, ROLES.ADMIN)
+  @ApiOperation({ summary: 'Create a new court booking' })
+  @ApiBody({
+    description: 'Court booking creation parameters',
+    schema: {
+      type: 'object',
+      properties: {
+        creator: {
+          type: 'number',
+          description: 'Employee ID creating the booking (optional)',
+        },
+        customerId: { type: 'number', description: 'Customer ID' },
+        courtId: { type: 'number', description: 'Court ID' },
+        bookingDate: {
+          type: 'string',
+          format: 'date',
+          description: 'Booking date',
+        },
+        slots: { type: 'string', description: 'JSON array of time slots' },
+        byMonth: { type: 'boolean', description: 'Monthly booking flag' },
+        branchId: { type: 'number', description: 'Branch ID' },
+        type: { type: 'string', description: 'Booking type' },
+      },
+      required: [
+        'customerId',
+        'courtId',
+        'bookingDate',
+        'slots',
+        'byMonth',
+        'branchId',
+        'type',
+      ],
+    },
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Court booking created successfully',
+  })
+  @ApiResponse({ status: 400, description: 'Invalid input data' })
+  async createCourtBookingClone(
+    @Body()
+    body: {
+      creator?: number;
+      customerId: number | string;
+      courtId: number;
+      bookingDate: string;
+      slots: string;
+      byMonth: boolean;
+      branchId: number;
+      type: string;
+    },
+  ) {
+    return this.bookingService.createCourtBookingClone(
+      body.creator || null,
+      body.customerId,
+      parseInt(body.courtId.toString()),
+      body.bookingDate,
+      body.slots,
+      body.byMonth,
+      parseInt(body.branchId.toString()),
+      body.type,
+    );
+  }
+
   @Post('service-bookings')
   @Roles(
     ROLES.CUSTOMER,
@@ -166,6 +231,52 @@ export class BookingController {
     },
   ) {
     return this.bookingService.createServiceBooking(
+      body.courtBookingId,
+      body.employeeId || null,
+      body.items,
+    );
+  }
+
+  @Post('service-bookings-clone')
+  @Roles(
+    ROLES.CUSTOMER,
+    ROLES.RECEPTIONIST,
+    ROLES.MANAGER,
+    ROLES.ADMIN,
+    ROLES.CASHIER,
+  )
+  @ApiOperation({ summary: 'Create a new service booking' })
+  @ApiBody({
+    description: 'Service booking creation parameters',
+    schema: {
+      type: 'object',
+      properties: {
+        courtBookingId: {
+          type: 'number',
+          description: 'Associated court booking ID',
+        },
+        employeeId: {
+          type: 'number',
+          description: 'Receptionist employee ID (optional)',
+        },
+        items: { type: 'string', description: 'JSON array of service items' },
+      },
+      required: ['courtBookingId', 'items'],
+    },
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Service booking created successfully',
+  })
+  async createServiceBookingClone(
+    @Body()
+    body: {
+      courtBookingId: number;
+      employeeId?: number;
+      items: string;
+    },
+  ) {
+    return this.bookingService.createServiceBookingClone(
       body.courtBookingId,
       body.employeeId || null,
       body.items,
